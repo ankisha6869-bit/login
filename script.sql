@@ -16,12 +16,12 @@ CREATE TABLE project_management (
     id SERIAL PRIMARY KEY,
     project_unique_id VARCHAR(100) UNIQUE NOT NULL,
     project_name VARCHAR(255) NOT NULL,
-    user VARCHAR(150),
+    project_mn_user VARCHAR(150),
     is_active BOOLEAN DEFAULT TRUE,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_project_user FOREIGN KEY (user) REFERENCES users_management(username) ON DELETE CASCADE
+    CONSTRAINT fk_project_user FOREIGN KEY (project_mn_user) REFERENCES users_management(username) ON DELETE CASCADE
 );
 
 CREATE TABLE task_management (

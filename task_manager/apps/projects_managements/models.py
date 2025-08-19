@@ -9,7 +9,7 @@ class Project(models.Model):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        db_column='user',  # Maps to your VARCHAR column
+        db_column='project_mn_user',  # Maps to your VARCHAR column
         to_field='username'  # References the username field
     )
     is_active = models.BooleanField(default=True)
