@@ -4,7 +4,6 @@ from .views import UserManagementViewSet
 
 router = DefaultRouter()
 router.register(r'user', UserManagementViewSet, basename='user')
-
 urlpatterns = [
     path('', include(router.urls)),
 ]
