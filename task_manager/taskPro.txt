@@ -1,0 +1,350 @@
+﻿
+* User authentication
+* CRUD operations
+* Permissions
+* API structure
+* Models with relationships
+* Serializers and viewsets
+* Testing
+* Optional: Frontend with React or just Django templates
+
+---
+
+## 🔧 Project Overview: "TaskPro" – A Task Manager API
+
+### 👤 Users:
+
+* Register/login/logout
+* Token-based authentication (use `djangorestframework-simplejwt`)
+
+### ✅ Tasks:
+
+* Belong to a user
+* Title, description, due date, priority, status
+* CRUD support
+* Filter by status, due date, or priority
+
+### 📁 Projects (optional):
+
+* Users can group tasks into projects
+* Each project has its own set of tasks
+
+---
+
+## 🔨 Step-by-Step Guide
+
+### 1. 📦 Setup Environment
+
+```bash
+mkdir taskpro && cd taskpro
+python -m venv env
+source env/bin/activate
+pip install django djangorestframework djangorestframework-simplejwt
+django-admin startproject config .
+python manage.py startapp tasks
+```
+
+Add to `INSTALLED_APPS` in `config/settings.py`:
+
+```python
+'rest_framework',
+'rest_framework_simplejwt',
+'tasks',
+```
+
+
+Setup DRF + JWT in `settings.py`:
+
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+```
+
+---
+
+### 2. 👤 User Authentication
+
+Use Django’s built-in `User` model, but for registration/login, use DRF views.
+
+**urls.py** in project root:
+
+```python
+from django.urls import path, include
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
+urlpatterns = [
+    path('api/', include('tasks.urls')),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+]
+```
+
+Optional: create your own registration API.
+
+---
+
+### 3. 🧱 Models (`tasks/models.py`)
+
+```python
+from django.db import models
+from django.contrib.auth.models import User
+
+class Project(models.Model):
+    name = models.CharField(max_length=100)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects')
+
+    def __str__(self):
+        return self.name
+
+class Task(models.Model):
+    PRIORITY_CHOICES = (
+        ('L', 'Low'),
+        ('M', 'Medium'),
+        ('H', 'High'),
+    )
+    STATUS_CHOICES = (
+        ('P', 'Pending'),
+        ('C', 'Completed'),
+        ('I', 'In Progress'),
+    )
+
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    due_date = models.DateField(null=True, blank=True)
+    priority = models.CharField(max_length=1, choices=PRIORITY_CHOICES, default='M')
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='P')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks', null=True, blank=True)
+
+    def __str__(self):
+        return self.title
+```
+
+---
+
+### 4. 🧰 Serializers (`tasks/serializers.py`)
+
+```python
+from rest_framework import serializers
+from .models import Task, Project
+
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = '__all__'
+        read_only_fields = ['owner']
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = '__all__'
+        read_only_fields = ['owner']
+```
+
+---
+
+### 5. 🧠 Views (`tasks/views.py`)
+
+Use **ViewSets** and **permissions**.
+
+```python
+from rest_framework import viewsets, permissions
+from .models import Task, Project
+from .serializers import TaskSerializer, ProjectSerializer
+
+class IsOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.owner == request.user
+
+class TaskViewSet(viewsets.ModelViewSet):
+    serializer_class = TaskSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
+
+    def get_queryset(self):
+        return Task.objects.filter(owner=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+class ProjectViewSet(viewsets.ModelViewSet):
+    serializer_class = ProjectSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
+
+    def get_queryset(self):
+        return Project.objects.filter(owner=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+```
+
+---
+
+### 6. 🧭 URLs (`tasks/urls.py`)
+
+```python
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import TaskViewSet, ProjectViewSet
+
+router = DefaultRouter()
+router.register(r'tasks', TaskViewSet, basename='task')
+router.register(r'projects', ProjectViewSet, basename='project')
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
+```
+
+---
+
+### 7. 🧪 Optional: Add Filters or Search
+
+```bash
+pip install django-filter
+```
+
+Update `settings.py`:
+
+```python
+'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+```
+
+Update viewsets to support filtering by `status`, `due_date`, etc.
+
+---
+
+### 8. 🚀 Run and Test
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+Test endpoints using Postman or Swagger (you can add `drf-yasg` for auto docs).
+
+---
+
+## ✅ Features You Can Add Later
+
+* Task deadlines with email reminders (use Celery)
+* Label/tag support (ManyToMany)
+* User roles (admin vs normal)
+* Activity logs / audit trail
+* Frontend with React or Vue
+
+---
+Got it! I’ll guide you by asking questions so you can think through and build everything yourself. Let’s start from the beginning and go step-by-step.
+
+---
+
+## 🧱 Step 1: Project and App Setup
+
+1. Have you created a new Django project and a new app inside it?
+
+   * Example: `taskmanager` project and `tasks` app
+
+2. Did you add your app to `INSTALLED_APPS` in `settings.py`?
+
+3. Have you installed Django REST Framework and added it to `INSTALLED_APPS`?
+
+---
+
+## 🧩 Step 2: Models
+
+4. What model(s) do you need for this app? Think:
+
+   * What is the core object you're managing?
+   * Will tasks belong to users?
+   * Do you want to support grouping tasks?
+
+5. For the `Task` model:
+
+   * What fields does a task need? (e.g., title, status, due date)
+   * Which fields should be optional?
+   * Should tasks belong to users?
+
+6. Do you want to create a `Project` model to group tasks?
+
+   * If so, what fields will a project need?
+
+---
+
+## 🧮 Step 3: Relationships
+
+7. How will the `Task` relate to the `User` model?
+
+   * What type of relationship do you need?
+   * Will a user have many tasks?
+
+8. How will the `Task` relate to the `Project` model (if you're using it)?
+
+---
+
+## 🔁 Step 4: Serialization
+
+9. Once your models are ready, what’s the purpose of a serializer in DRF?
+
+10. What fields should your `TaskSerializer` expose?
+
+* Should some fields be read-only?
+
+11. How will you ensure the current user is automatically set when creating a task?
+
+---
+
+## 🧠 Step 5: Views
+
+12. Will you use viewsets or function-based views?
+
+13. What permissions should each view have?
+
+* Should users be able to view each other’s tasks?
+
+14. How will you filter the tasks shown to the user?
+
+---
+
+## 🗺️ Step 6: URLs and Routing
+
+15. How will you route requests to your task and project views?
+
+* Will you use `DefaultRouter` or manual URLs?
+
+16. What endpoints do you need to support?
+
+* Create task
+* List tasks
+* Update task
+* Delete task
+
+---
+
+## 🔐 Step 7: Authentication
+
+17. What kind of authentication will you use (e.g., JWT)?
+
+18. How will users log in and get a token?
+
+19. Will you create a custom user registration endpoint?
+
+---
+
+## 🧪 Step 8: Testing
+
+20. How will you test your API endpoints?
+
+* Postman? cURL? Swagger?
+
+21. What kind of test data will you use?
+
+---
+
+Let me know when you’ve answered or implemented something — I’ll keep guiding you with the next steps. Ready for the first one?

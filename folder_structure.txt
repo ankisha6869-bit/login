@@ -1,0 +1,87 @@
+main_project_folder/                                        
+?
+??? manage.py
+??? README.md
+?
+??? project_name/(Django project folder)                                     
+?   ??? __init__.py
+?   ??? settings.py                           
+?   ??? urls.py                               
+?   ??? wsgi.py
+?   ??? asgi.py
+?
+??? core/ (folder which contains core functionalities)                                    
+?   ??? __init__.py
+?   ??? middleware/                           
+?   ?   ??? auth_middleware.py
+?   ??? permissions/                          
+?   ?   ??? permission_handler.py
+?   ??? mixins/
+?   ?   ??? pagination_mixin.py
+?   ??? helpers/
+?   ?   ??? template_helpers.py
+?   ??? utils/
+?   ?   ??? date_utils.py
+?   ??? data_library/
+?       ??? status_codes.py
+?
+??? services/  (file that will have services for external APIs)                             
+?   ??? __init__.py
+?   ??? base_service.py                        
+?   ??? tms_service.py                         
+?
+??? modules/                                  
+?   ??? __init__.py
+?   ?
+?   ??? django_apps/(This is where we must create Django Apps inside the module)                                
+?   ?   ??? __init__.py
+?   ?   ??? apps.py                            
+?   ?   ??? views.py                           
+?   ?   ??? urls.py                             
+?   ?   ??? validations.py                      
+?   ?   ??? templates/app_name(folder)/                    
+?   ?   ?   |---HTML pages here
+?   ?   ??? templates/app_name(folder)/components/         
+?   ?   ?   ??? Any component that is made
+?   ?   ??? static/custom/tasks_ajax.js         
+?   ?   ??? tests/                              
+?   ?       ??? test_views.py
+?   ?       ??? test_validations.py
+?   ?
+?   ??? Similarly another Django App will be made in the module folder
+?
+??? templates/ (folder that will have general html templates)                                
+?   ??? layouts/
+?   ?   |-- This folder will have the files like bas.html, head.html, etc                   
+?   ??? partials/                               
+?       |-- This folder will contain files like small components that are made to be used everywhere like Modals, SweetAlerts
+?
+??? static/                                   
+?   ??? css/
+?   ?   |--This folder will contain two more folders (Custom, Static) custom will contain css which are written by us while		static will be the css which is given by bootstrap or other (not written by us)
+?   ??? js/
+?   ?   |--This folder will contain two more folders (Custom, Static) custom will contain css which are written by us while		static will be the css which is given by bootstrap or other (not written by us)
+?   ??? custom/
+?   ?   ??? This folder will contain files like custom js which is used everywhere like validations and all
+?   ??? images/
+		|-- Images folder will have subfolders for any images like icons,logo,svgs
+?
+??? validations/                               
+?   ??? form_validations.py
+?
+??? logs/
+?   ??? frontend.log
+?
+??? documentation/                             
+?   ??? architecture.md
+?   ??? flow.md
+?   ??? error_codes.md
+?
+??? requirements/                              
+?   ??? base.txt
+?   ??? development.txt
+?   ??? production.txt
+?
+??? .env.development                           
+??? .env.production                             
+??? .gitignore
