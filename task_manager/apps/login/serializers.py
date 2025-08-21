@@ -1,57 +1,57 @@
-import jwt
-import datetime
-from django.conf import settings
-from rest_framework import serializers
-from django.contrib.auth.hashers import check_password
-from apps.users_management.models import UserManagement
+import jwt # Imports PyJWT library for JWT creation/decoding
+import datetime # Imports datetime for setting token expiration times
+from django.conf import settings # Imports Django settings (SECRET_KEY)
+from rest_framework import serializers # Imports DRF serializers
+from django.contrib.auth.hashers import check_password # Imports function to verify hashed passwords
+from apps.users_management.models import UserManagement # Imports UserManagement model
 
+class LoginSerializer(serializers.Serializer): # Defines a serializer for login input
+    username = serializers.CharField() # Expects a username field
+    password = serializers.CharField(write_only=True) # Expects a password field (write_only means it's not included in output)
 
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField(write_only=True)
-
+    # Custom validation method for the entire data payload
     def validate(self, data):
-        username = data.get("username")
-        password = data.get("password")
+        username = data.get("username") # Get username from input data
+        password = data.get("password") # Get password from input data
 
         # Find user
         try:
-            user = UserManagement.objects.get(
+            user = UserManagement.objects.get( # Try to retrieve user by username
                 username=username,
-                is_active=True,
-                is_deleted=False
+                is_active=True, # User must be active
+                is_deleted=False # User must not be soft-deleted
             )
-        except UserManagement.DoesNotExist:
-            raise serializers.ValidationError("Invalid username or password")
+        except UserManagement.DoesNotExist: # If user not found or criteria not met
+            raise serializers.ValidationError("Invalid username or password") # Raise validation error
 
         # Check password
-        if not check_password(password, user.password):
-            raise serializers.ValidationError("Invalid username or password")
+        if not check_password(password, user.password): # Verify provided password against hashed password
+            raise serializers.ValidationError("Invalid username or password") # Raise error if password doesn't match
 
         # Generate tokens manually
-        payload = {
-            "user_id": user.id,   # DRF expects this, not "id"
-            "username": user.username,
-            "email": user.email,
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=15),
-            "iat": datetime.datetime.utcnow(),
+        payload = { # Payload for the access token
+            "user_id": user.id,   # DRF expects this, not "id" (common JWT claim)
+            "username": user.username, # Include username
+            "email": user.email, # Include email
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=15), # Expiration time (15 minutes from now)
+            "iat": datetime.datetime.utcnow(), # Issued at time
         }
+        # Encode the access token using payload, SECRET_KEY, and HS256 algorithm
         access_token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
-        refresh_payload = {
-            "user_id": user.id,   #  again user_id
+        refresh_payload = { # Payload for the refresh token
+            "user_id": user.id,   # again user_id
             "username": user.username,
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(days=7),
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(days=7), # Expiration time (7 days from now)
             "iat": datetime.datetime.utcnow(),
         }
-
+        # Encode the refresh token
         refresh_token = jwt.encode(refresh_payload, settings.SECRET_KEY, algorithm="HS256")
 
-
-        return {
+        return { # Return a dictionary containing tokens and user data
             "access": access_token,
             "refresh": refresh_token,
-            "user": {
+            "user": { # Detailed user information for the response
                 "id": user.id,
                 "username": user.username,
                 "first_name": user.first_name,

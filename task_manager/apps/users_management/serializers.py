@@ -1,6 +1,5 @@
-from wsgiref import validate
 from rest_framework import serializers
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password # Imports function to hash passwords
 from .models import UserManagement
 
 #This is where we can write serializers which will help serialize the data and add validations to the data accordingly
@@ -19,13 +18,15 @@ class UserManagementSerializer(serializers.Serializer):
     is_deleted = serializers.BooleanField(read_only = True)
     is_active = serializers.BooleanField(read_only = True)
     
+    # Custom validation for username uniqueness
+
     def validate_username(self, value):
-        user_qs = UserManagement.objects.filter(username=value)
-        if self.instance:
-            user_qs = user_qs.exclude(pk=self.instance.pk)
-        if user_qs.exists():
-            raise serializers.ValidationError('Username already taken')
-        return value 
+        user_qs = UserManagement.objects.filter(username=value) # Query for existing username
+        if self.instance: # If updating an existing instance
+            user_qs = user_qs.exclude(pk=self.instance.pk) # Exclude current instance from uniqueness check
+        if user_qs.exists(): # If username already exists (for other users)
+            raise serializers.ValidationError('Username already taken') # Raise validation error
+        return value # Return valid username
 
 
     def validate_phone_number(self, value):

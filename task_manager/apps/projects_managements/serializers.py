@@ -34,7 +34,7 @@ class ProjectSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(read_only = True)
 
     def validate_project_name(self, value):
-        if Project.objects.filter(project_name = value):
+        if Project.objects.filter(project_name = value, is_deleted = False).exists():
             raise serializers.ValidationError({"Project Name": "Project Name already Exists"})
         return value
 
@@ -48,7 +48,18 @@ class ProjectSerializer(serializers.Serializer):
         try:
             with transaction.atomic():
                 project_unique_id = generate_custom_unique_id()
-                project = Project.objects.create(
+
+
+                project_name = validated_data.get('project_name')
+                project_user = validated_data.get('user')
+                if Project.objects.filter(project_name=project_name, user=project_user,is_deleted=True ).exists():
+                    project = Project.objects.get(project_name=project_name, user=project_user, is_deleted=True)
+                    project.is_deleted = False
+                    project.project_unique_id = project_unique_id
+                    project.save()
+                    return project
+                else:
+                    project = Project.objects.create(
                     project_unique_id = project_unique_id,
                     project_name = validated_data.get('project_name'),
                     user = validated_data.get('user'),
