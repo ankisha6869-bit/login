@@ -1,0 +1,39 @@
+CREATE TABLE businesses (
+    businesses_id SERIAL PRIMARY KEY,
+    businesses_unique_id VARCHAR(255) DEFAULT NULL UNIQUE,
+    businesses_user_name VARCHAR(255) DEFAULT NULL UNIQUE,
+    businesses_legal_name VARCHAR(255) DEFAULT NULL UNIQUE,
+    businesses_organization_name VARCHAR(255) DEFAULT NULL UNIQUE,
+    businesses_gst_number VARCHAR(255) DEFAULT NULL UNIQUE,
+    businesses_website VARCHAR(255) DEFAULT NULL,
+    businesses_documents TEXT DEFAULT NULL,
+    businesses_logo TEXT DEFAULT NULL,
+    businesses_is_active BOOLEAN DEFAULT TRUE,
+    businesses_is_deleted BOOLEAN DEFAULT FALSE,
+    businesses_created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    businesses_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO businesses (
+    businesses_unique_id,
+    businesses_user_name,
+    businesses_legal_name,
+    businesses_organization_name,
+    businesses_gst_number,
+    businesses_website,
+    businesses_documents,
+    businesses_logo,
+    businesses_is_active,
+    businesses_is_deleted
+) VALUES (
+    'BIZ5f8d7c4',
+    'GlobalTechInnovations',
+    'Global Tech Innovations Pvt Ltd',
+    'GTI Group',
+    '29ABCDE1234F1Z1',
+    'https://www.globaltech.com',
+    '{"contract": "url/to/gti_contract.pdf", "license": "url/to/gti_license.txt"}',
+    'url/to/gti_logo.png',
+    TRUE,
+    FALSE
+);
